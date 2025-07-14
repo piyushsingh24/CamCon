@@ -8,7 +8,7 @@ import Signup from './pages/signup.jsx';
 import StudentDashboard from './components/dashboard/StudentDashboard';
 import MentorDashboard from './components/dashboard/MentorDashboard';
 import NotFound from './pages/NotFound';
-import LearnMore from './pages/learnMore.jsx';
+import LearnMore from './pages/LearnMore.jsx';
 import StudentProfile from './components/Profile/StudentProfile.jsx';
 import MentorChatPage from './pages/MentorChatSection.jsx';
 import MentorProfilePage from './components/Profile/MentorProfile.jsx';
