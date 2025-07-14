@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "../components/ui/button";
 import { GraduationCap, Video, MessageCircle, Shield, Star, Zap } from "lucide-react";
