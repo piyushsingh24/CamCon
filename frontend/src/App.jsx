@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "./components/ui/toaster.jsx";
 import { useAuth } from './contexts/AuthContext.jsx';
+
 import Index from './pages/Index';
-import Login from './pages/login.jsx'
+import Login from './pages/login.jsx';
 import Signup from './pages/signup.jsx';
 import StudentDashboard from './components/dashboard/StudentDashboard';
 import MentorDashboard from './components/dashboard/MentorDashboard';
@@ -11,7 +12,9 @@ import LearnMore from './pages/learnMore.jsx';
 import StudentProfile from './components/Profile/StudentProfile.jsx';
 import MentorChatPage from './pages/MentorChatSection.jsx';
 import MentorProfilePage from './components/Profile/MentorProfile.jsx';
+import GoogleFormPopup from './components/GoogleFormPopup.jsx'; // ✅ Popup component
 
+// ✅ ProtectedRoute component
 const ProtectedRoute = ({ children, allowedRole }) => {
   const { user, loading } = useAuth();
 
@@ -39,36 +42,23 @@ function App() {
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path='/learnMore' element={<LearnMore/>} />
+          <Route path="/learnMore" element={<LearnMore />} />
 
-          <Route path='/student/dashboard' element={<StudentDashboard/>} />
-          <Route path='/mentor/dashboard' element={<MentorDashboard/>} />
+          {/* Optional: wrap these in <ProtectedRoute> if needed */}
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/mentor/dashboard" element={<MentorDashboard />} />
           <Route path="/student/profile" element={<StudentProfile />} />
-          <Route path='/mentor/profile' element={<MentorProfilePage/>} />
+          <Route path="/mentor/profile" element={<MentorProfilePage />} />
           <Route path="/mentor/:id" element={<MentorChatPage />} />
-
-        
-          {/* Protected Routes
-          <Route
-            path="/student/dashboard"
-            element={
-              <ProtectedRoute allowedRole="student">
-                <StudentDashboard />
-               </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/mentor/dashboard"
-            element={
-              <ProtectedRoute allowedRole="mentor">
-                <MentorDashboard />
-              </ProtectedRoute>
-            }
-          /> */}
 
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+
+        {/* ✅ This is outside <Routes> so it appears on every page */}
+        <GoogleFormPopup />
+
+        {/* Toaster notifications */}
         <Toaster />
       </div>
     </Router>

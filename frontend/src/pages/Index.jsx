@@ -8,6 +8,7 @@ import StudentDashboard from "../components/dashboard/StudentDashboard.jsx";
 import MentorDashboard from "../components/dashboard/MentorDashboard.jsx";
 import { authAPI } from "../components/auth/authModel.jsx";
 import { motion } from "framer-motion";
+import GoogleFormPopup from "../components/GoogleFormPopup.jsx"
 
 const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -61,6 +62,8 @@ const Index = () => {
           </div>
         </div>
       </header>
+
+     <GoogleFormPopup triggerText="Apply Now" />
 
       <section className="container mx-auto px-4 py-20 text-center">
         <motion.div
