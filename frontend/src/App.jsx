@@ -44,7 +44,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/learnMore" element={<LearnMore />} />
 
-          {/* Optional: wrap these in <ProtectedRoute> if needed */}
+           {/* Optional: wrap these in <ProtectedRoute> if needed */}
           <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/mentor/dashboard" element={<MentorDashboard />} />
           <Route path="/student/profile" element={<StudentProfile />} />
@@ -55,10 +55,10 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
 
-        {/* ✅ This is outside <Routes> so it appears on every page */}
+       
         <GoogleFormPopup />
 
-        {/* Toaster notifications */}
+       
         <Toaster />
       </div>
     </Router>

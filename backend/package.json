@@ -10,14 +10,17 @@
     "start": "next start"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "latest",
-    "cors": "latest",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "crypto": "latest",
     "dotenv": "^17.0.1",
-    "express": "latest",
+    "express": "^5.1.0",
     "http": "latest",
-    "jsonwebtoken": "latest",
-    "mongoose": "latest",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.4",
+    "nodemailer": "^7.0.5",
     "razorpay": "latest",
     "socket.io": "latest"
   },

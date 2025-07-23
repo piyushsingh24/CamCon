@@ -21,66 +21,20 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
-    role: {
-      type: String,
-      enum: ["junior", "senior"],
-      required: true,
-    },
-
-    // 🔹 Senior-specific details
-    college: {
-      type: String,
-      required: function () {
-        return this.role === "senior";
-      },
-    },
-    branch: {
-      type: String,
-    },
-    year: {
-      type: Number,
-    },
     bio: {
       type: String,
       maxlength: 500,
     },
-    experience: {
-      type: String,
-      maxlength: 1000,
-    },
-
+    
     // 🔹 Profile & availability
     profilePicture: {
       type: String,
       default: "",
     },
-    isAvailable: {
-      type: Boolean,
-      default: true,
-    },
     isProfileCompleted: {
       type: Boolean,
       default: false,
     },
-    hourlyRate: {
-      type: Number,
-      default: 99,
-    },
-    totalEarnings: {
-      type: Number,
-      default: 0,
-    },
-    rating: {
-      average: {
-        type: Number,
-        default: 0,
-      },
-      count: {
-        type: Number,
-        default: 0,
-      },
-    },
-
     // 🔹 Verification
     isVerified: {
       type: Boolean,
@@ -92,8 +46,6 @@ const userSchema = new mongoose.Schema(
     verifyOtpExpiry: {
       type: Date,
     },
-
-    // 🔹 Forgot Password
     resetPasswordToken: {
       type: String,
     },
@@ -121,19 +73,19 @@ userSchema.pre("save", async function (next) {
 });
 
 //
-// ✅ Method: Compare password
+// ✅ Method: Compare password for login
 //
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 //
-// ✅ Method: Generate OTP (valid for 24 hours instead of 10 min)
+// ✅ Method: Generate OTP for email/phone verification
 //
 userSchema.methods.generateOtp = function () {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6‑digit OTP
   this.verifyOtp = otp;
-  this.verifyOtpExpiry = Date.now() + 24 * 60 * 60 * 1000; // ✅ valid for 24 hours
+  this.verifyOtpExpiry = Date.now() + 10 * 60 * 1000; // valid for 10 min
   return otp;
 };
 
@@ -142,9 +94,7 @@ userSchema.methods.generateOtp = function () {
 //
 userSchema.methods.validateOtp = function (inputOtp) {
   return (
-    this.verifyOtp === inputOtp &&
-    this.verifyOtpExpiry &&
-    this.verifyOtpExpiry > Date.now()
+    this.verifyOtp === inputOtp && this.verifyOtpExpiry && this.verifyOtpExpiry > Date.now()
   );
 };
 
@@ -154,12 +104,12 @@ userSchema.methods.validateOtp = function (inputOtp) {
 userSchema.methods.generateResetToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
   this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-  this.resetPasswordExpiry = Date.now() + 10 * 60 * 1000; // valid for 10 minutes
-  return resetToken;
+  this.resetPasswordExpiry = Date.now() + 10 * 60 * 1000; // valid for 10 min
+  return resetToken; // send this token via email
 };
 
 //
-// ✅ Method: Validate reset token
+// ✅ Method: Validate reset token (you'll hash input before comparing)
 //
 userSchema.methods.validateResetToken = function (token) {
   const hashed = crypto.createHash("sha256").update(token).digest("hex");
@@ -170,7 +120,5 @@ userSchema.methods.validateResetToken = function (token) {
   );
 };
 
-// ✅ Export the model
-export default mongoose.model("User", userSchema);
-
-
+const Student =  mongoose.model("Student", userSchema);
+export default Student;

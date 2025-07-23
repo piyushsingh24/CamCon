@@ -107,14 +107,14 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => handleAuthClick('signup')}
-                className="text-lg px-8 py-6 border-2"
+                className="text-lg px-8 py-6 border-2 bg-cyan-400 hover:bg-cyan-600 hover:text-black"
               >
                 Become a Mentor
               </Button>
             </a>
             {/* </a> */}
           </div>
-        </motion.div>
+        </motion.div> 
       </section>
 
       <section className="container mx-auto px-4 py-16">

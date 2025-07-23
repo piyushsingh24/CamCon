@@ -23,16 +23,14 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["junior", "senior"],
+      enum: ["student", "mentor"],
       required: true,
     },
 
     // 🔹 Senior-specific details
     college: {
       type: String,
-      required: function () {
-        return this.role === "senior";
-      },
+      required: true,
     },
     branch: {
       type: String,
@@ -92,8 +90,6 @@ const userSchema = new mongoose.Schema(
     verifyOtpExpiry: {
       type: Date,
     },
-
-    // 🔹 Forgot Password
     resetPasswordToken: {
       type: String,
     },
@@ -121,56 +117,12 @@ userSchema.pre("save", async function (next) {
 });
 
 //
-// ✅ Method: Compare password
+// ✅ Method: Compare password for login
 //
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-//
-// ✅ Method: Generate OTP (valid for 24 hours instead of 10 min)
-//
-userSchema.methods.generateOtp = function () {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  this.verifyOtp = otp;
-  this.verifyOtpExpiry = Date.now() + 24 * 60 * 60 * 1000; // ✅ valid for 24 hours
-  return otp;
-};
 
-//
-// ✅ Method: Validate OTP
-//
-userSchema.methods.validateOtp = function (inputOtp) {
-  return (
-    this.verifyOtp === inputOtp &&
-    this.verifyOtpExpiry &&
-    this.verifyOtpExpiry > Date.now()
-  );
-};
-
-//
-// ✅ Method: Generate password reset token
-//
-userSchema.methods.generateResetToken = function () {
-  const resetToken = crypto.randomBytes(20).toString("hex");
-  this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-  this.resetPasswordExpiry = Date.now() + 10 * 60 * 1000; // valid for 10 minutes
-  return resetToken;
-};
-
-//
-// ✅ Method: Validate reset token
-//
-userSchema.methods.validateResetToken = function (token) {
-  const hashed = crypto.createHash("sha256").update(token).digest("hex");
-  return (
-    this.resetPasswordToken === hashed &&
-    this.resetPasswordExpiry &&
-    this.resetPasswordExpiry > Date.now()
-  );
-};
-
-// ✅ Export the model
-export default mongoose.model("User", userSchema);
-
-
+const Mentor =  mongoose.model("Mentor", userSchema);
+export default Mentor;

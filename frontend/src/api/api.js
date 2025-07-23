@@ -68,14 +68,14 @@ export const usersAPI = {
     const params = new URLSearchParams();
     if (college) params.append('college', college);
     if (search) params.append('search', search);
-    
+
     return makeAuthenticatedRequest(`/users/mentors?${params.toString()}`);
   },
 
   getOnlineMentors: async (college) => {
     const params = new URLSearchParams();
     if (college) params.append('college', college);
-    
+
     return makeAuthenticatedRequest(`/users/mentors/online?${params.toString()}`);
   },
 
@@ -106,7 +106,7 @@ export const sessionsAPI = {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     if (type) params.append('type', type);
-    
+
     return makeAuthenticatedRequest(`/sessions?${params.toString()}`);
   },
 
@@ -148,3 +148,10 @@ export const paymentsAPI = {
     });
   },
 };
+
+// Colleges API
+export const collegesAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/colleges`);
+    if (!response.ok) throw new Error('Failed to fetch colleges');
+  }}

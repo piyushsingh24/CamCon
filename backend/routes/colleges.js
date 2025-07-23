@@ -4,31 +4,19 @@ import User from "../models/User.js"
 
 const router = express.Router()
 
-// Get all colleges
+
+// Get all active colleges at once
 router.get("/", async (req, res) => {
   try {
-    const { search, type, state } = req.query
-    const query = { isActive: true }
-
-    if (search) {
-      query.name = { $regex: search, $options: "i" }
-    }
-
-    if (type) {
-      query.type = type
-    }
-
-    if (state) {
-      query["location.state"] = state
-    }
-
-    const colleges = await College.find(query).sort({ name: 1 })
-    res.json({ colleges })
+    const colleges = await College.find({ isActive: true }).sort({ name: 1 });
+    res.status(200).json({ colleges, total: colleges.length });
   } catch (error) {
-    console.error("Get colleges error:", error)
-    res.status(500).json({ message: "Server error" })
+    console.error("Get colleges error:", error);
+    res.status(500).json({ message: "Unable to fetch colleges. Please try again later." });
   }
-})
+});
+
+
 
 // Get college by ID with available seniors
 router.get("/:id", async (req, res) => {

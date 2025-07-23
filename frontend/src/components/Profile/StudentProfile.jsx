@@ -633,22 +633,6 @@ export default function StudentProfilePage() {
       </Card>
 
       {/*
-      // ===== BACKEND SETUP SAMPLE (commented) =====
-      
-      // const express = require('express');
-      // const app = express();
-      // const bodyParser = require('body-parser');
-      // const cors = require('cors');
-      // app.use(cors());
-      // app.use(bodyParser.json());
-
-      // app.post('/api/profile/update', (req, res) => {
-      //   const updatedProfile = req.body;
-      //   // Save logic to DB
-      //   res.status(200).json({ message: 'Profile saved', data: updatedProfile });
-      // });
-
-      // app.listen(3000, () => console.log('Server listening at http://localhost:3000'));
       */}
     </div>
   );
