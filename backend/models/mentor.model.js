@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 
 const userSchema = new mongoose.Schema(
   {
@@ -87,7 +86,7 @@ const userSchema = new mongoose.Schema(
     verifyOtp: {
       type: String,
     },
-    verifyOtpExpiry: {
+    verifyOtpExpireAt: {
       type: Date,
     },
     resetPasswordToken: {

@@ -2,12 +2,12 @@ import mongoose from "mongoose"
 
 const sessionSchema = new mongoose.Schema(
   {
-    junior: {
+    Student: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    senior: {
+    Mentor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,

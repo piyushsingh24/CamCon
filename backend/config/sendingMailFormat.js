@@ -26,7 +26,7 @@ export const verifyOtpEmail = (User , otp) => {
   }
 }
 
-export const forgetPasswordOtp = (User, otp) => {
+export const  forgetPasswordOtp = (User, otp) => {
     return {
       from: process.env.SENDER_MAIL,
       to: User.email,

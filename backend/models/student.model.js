@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
+    Mobile :{
+      type:Number,
+      unique:true,
+      minlength:10,
+      maxlength:10
+    },
     password: {
       type: String,
       required: true,
@@ -35,7 +41,20 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // 🔹 Verification
+    //Mobile number Verified
+    // isMobileVerified:{
+      
+    // },
+    // VerifyMobileOtp:{
+
+    // },
+    // MobileVerifyExpiry:{
+
+    // },
+
+
+
+    // Email Verification
     isVerified: {
       type: Boolean,
       default: false,
@@ -110,7 +129,6 @@ userSchema.methods.generateResetToken = function () {
 
 //
 // ✅ Method: Validate reset token (you'll hash input before comparing)
-//
 userSchema.methods.validateResetToken = function (token) {
   const hashed = crypto.createHash("sha256").update(token).digest("hex");
   return (

@@ -4,6 +4,7 @@ import Student from "../models/student.model.js";
 import Mentor from "../models/mentor.model.js";
 import transporter from '../config/nodemailer.js'
 import { welcomeEmail, verifyOtpEmail, forgetPasswordOtp } from "../config/sendingMailFormat.js"
+import bcrypt from "bcryptjs";
 
 
 
@@ -148,11 +149,19 @@ router.post("/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    //its help to set the cookie
+    res.cookie("token", token, {
+      httpOnly: true, //only  http request can access this cookie 
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? 'none' : "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // maximum age or limit to store the cookie 
+    })
+
+
     // 📨 Successful response
     res.status(200).json({
       success: true,
       message: "Login successful",
-      token,
       user: {
         id: user._id,
         name: user.name,
@@ -176,188 +185,276 @@ router.post("/login", async (req, res) => {
   }
 });
 
+//verify the Mail 
+router.post("/verify", async (req, res) => {
+  try {
+    const { userId, otp, role } = req.body;
 
-// // Get current user
-// router.get("/me", async (req, res) => {
-//   try {
-//     const authHeader = req.headers["authorization"]
-//     const token = authHeader && authHeader.split(" ")[1]
+    // Validate Input
+    if (!userId || !otp || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Details or OTP",
+      });
+    }
 
-//     if (!token) {
-//       return res.status(401).json({ message: "No token provided" })
-//     }
+    // Select model based on role
+    let Model;
+    if (role === "student") {
+      Model = Student;
+    } else if (role === "mentor") {
+      Model = Mentor;
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: " Invalid Details. ",
+      });
+    }
 
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key")
-//     const user = await User.findById(decoded.userId).select("-password").populate("college")
+    // Fetch User from respective model
+    const user = await Model.findById(userId);
 
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" })
-//     }
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found. Please register again.",
+      });
+    }
 
-//     res.json({ user })
-//   } catch (error) {
-//     console.error("Get user error:", error)
-//     res.status(500).json({ message: "Server error" })
-//   }
-// })
+    // Already verified check
+    if (user.isVerified) {
+      return res.status(200).json({
+        success: false,
+        message: " Account is already verified.",
+      });
+    }
 
+    // OTP expiration check
+    if (user.verifyOtpExpireAt < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired. Please request a new one.",
+      });
+    }
+
+    // Compare OTP
+    if (user.verifyOtp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect OTP. Please try again.",
+      });
+    }
+
+    // OTP valid — update account
+    user.isVerified = true;
+    user.verifyOtp = 0;
+    user.verifyOtpExpire = 0;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `${role.charAt(0).toUpperCase() + role.slice(1)} account verified successfully! `,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+});
 
 //logout
-// export const logout = (req, res) => {
+router.get("/logout", async (req, res) => {
+  try {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict"
+    })
 
-//   try {
-//     res.clearCookie('token', {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: process.env.NODE_ENV === 'production' ? "none" : "strict"
-//     })
+    return res.status(200).json({
+      sucess: true, message: "User sucessfully logout"
+    })
+  } catch (error) {
+    res.status(401).json({ sucess: false, message: error.message })
+  }
+})
 
-//     return res.status(200).json({
-//       sucess: true, message: "User sucessfully logout"
-//     })
-//   } catch (error) {
-//     res.status(401).json({ sucess: false, message: error.message })
-//   }
-// }
+//forget password otp sent
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
 
-//verify the Mail 
-// export const Verify = async (req, res) => {
-//   try {
-//     const { userId, otp } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
 
-//     // Find the user
-//     const user = await UserModel.findById(userId);
+    // 🔎 Check in both collections
+    let user = await Student.findOne({ email });
+    let userRole = "student";
+    if (!user) {
+      user = await Mentor.findOne({ email });
+      userRole = "mentor";
+    }
 
-//     // If the user or OTP is missing, return an error
-//     if (!user || !otp) {
-//       return res.json({ success: false, message: "User not found! Please login again." });
-//     }
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "No account found with this email.",
+      });
+    }
 
-//     // If the account is already verified, return a message
-//     if (user.isAccountVerified) {
-//       return res.json({ success: false, message: "Account is already verified." });
-//     }
+    if (!user.isVerified) {
+      return res.status(403).json({   
+        success: false,
+        message: "Email is not verified. Please verify your account first."
+      });
+    }
 
-//     // Check if the OTP has expired
-//     if (user.verifyOtpExpireAt < Date.now()) {
-//       return res.json({ success: false, message: "OTP has expired. Please request a new one." });
-//     }
+    //  Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-//     // Verify the OTP
-//     if (user.verifyOtp == otp) {
-//       user.isAccountVerified = true;
-//       user.verifyOtp = 0;
-//       user.verifyOtpExpireAt = 0; // Reset OTP and expiry
+    //  Save OTP (valid for 24 hours)
+    user.resetPasswordToken = otp;
+    user.resetPasswordExpiry = Date.now() + 24 * 60 * 60 * 1000;
+    await user.save();
 
-//       // Save the updated user and send a response
-//       await user.save();
+    //  Send OTP email (non-blocking)
+    transporter
+      .sendMail(forgetPasswordOtp(user, otp))
+      .then(() => console.log(`📧 Forgot password OTP sent to ${user.email}`))
+      .catch((err) => console.error("❌ Error sending OTP email:", err));
 
-//       return res.json({ success: true, message: "Account verified successfully!" });
-//     } else {
-//       return res.json({ success: false, message: "Incorrect OTP. Please try again." });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ success: false, message: "Server error, please try again later." });
-//   }
-// };
-
-//forget password
-// export const forgetPassword = async (req, res) => {
-//   const { email } = req.body;
-
-//   try {
-//     // Find user by email
-//     const User = await UserModel.findOne({ email });
-//     if (!User) {
-//       return res.status(404).json({ sucess: false, message: "No user found, create an account" });
-//     }
-
-//     // Generate OTP
-//     const otp = Math.floor(100000 + Math.random() * 900000);
-
-//     // Set OTP and Expiration
-//     User.resetOtp = otp;
-//     User.resetOtpExprieAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-
-//     // Save updated user
-//     await User.save();
-
-//     // Send OTP email
-//     await transporter.sendMail(forgetPasswordOtp(User, otp));
-
-//     return res.status(200).json({ success: true, message: "OTP sent to your email" });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "An error occurred: " + error.message });
-//   }
-// };
-
+    //  Respond
+    res.status(200).json({
+      success: true,
+      message: "OTP sent successfully. Check your email.",
+      role: userRole,
+    });
+  } catch (err) {
+    console.error("❌ Forget password route error:", err);
+    res.status(500).json({ success: false, message: "Server error during forgot password" });
+  }
+});
 
 //verifyForgetPassword
-// export const verifyForgetPassword = async (req, res) => {
-//   const { otp, email, newPassword } = req.body;
+router.post("/verify-forget-password", async (req, res) => {
+  const { otp, email, newPassword } = req.body;
 
-//   try {
-//     // Check if required fields are missing
-//     if (!otp || !email || !newPassword) {
-//       return res.status(400).json({ success: false, message: "Data is Missing" });
-//     }
+  try {
+    // 🛠 Validate input
+    if (!otp || !email || !newPassword) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
 
-//     // Find user by email
-//     const User = await UserModel.findOne({ email });
-//     if (!User) {
-//       return res.status(404).json({ success: false, message: "User not found" });
-//     }
+    // 🔎 Search in both collections
+    let user = await Student.findOne({ email });
+    let role = "student";
+    if (!user) {
+      user = await Mentor.findOne({ email });
+      role = "mentor";
+    }
 
-//     // Check if account is verified
-//     if (!User.isAccountVerified) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Account is not verified. Please verify your account first.",
-//       });
-//     }
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
-//     // Verify OTP and check expiration
-//     if (User.resetOtp != otp || User.resetOtpExprieAt < Date.now()) {
-//       return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
-//     }
-
-//     // Check if the new password is the same as the old one
-//     const isSamePassword = await brcrypt.compare(newPassword, User.password);
-//     if (isSamePassword) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "New password cannot be the same as the current password",
-//       });
-//     }
-
-//     // Hash the new password
-//     const hashedPassword = await brcrypt.hash(newPassword, 10);
-//     User.password = hashedPassword;
-
-//     // Reset OTP and expiration fields
-//     User.resetOtp = 0;
-//     User.resetOtpExprieAt = 0;
-
-//     // Save the user data
-//     await User.save();
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Password reset successfully",
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: error.message });
-//   }
-// };
+    // ✅ Check if account is verified
+    if (user.isVerified === false) {
+      return res.status(400).json({
+        success: false,
+        message: "Account is not verified. Please verify your account first.",
+      });
+    }
 
 
-// export const isauthenticed = async (req, res) => {
-//   try {
-//     res.json({ sucess: true })
-//   } catch (error) {
-//     res.json({ sucess: false, message: message.error })
-//   }
-// }
+
+    if (user.resetPasswordExpiry < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired. Please request a new one.",
+      });
+    }
+
+    if (user.resetPasswordToken !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Otp is Wrong please Try again !"
+      })
+    }
+
+    // 🔒 Check if new password is same as old one
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password cannot be the same as your current password",
+      });
+    }
+
+    // 🔑 Hash and update password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    // ♻️ Clear OTP fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiry = undefined;
+
+    // 💾 Save updated user
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+      role,
+    });
+  } catch (error) {
+    console.error("❌ verifyForgetPassword error:", error);
+    return res.status(500).json({ success: false, message: "Server error during password reset" });
+  }
+});
+
+
+
+
+
+
+
+// // Get current user
+router.get("/me", async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"]
+    const token = authHeader && authHeader.split(" ")[1]
+
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" })
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key")
+    const user = await User.findById(decoded.userId).select("-password").populate("college")
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
+    res.json({ user })
+  } catch (error) {
+    console.error("Get user error:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+
+
+
+// Is authenticed
+export const isauthenticed = async (req, res) => {
+  try {
+    res.json({ sucess: true })
+  } catch (error) {
+    res.json({ sucess: false, message: message.error })
+  }
+}
 
 export default router

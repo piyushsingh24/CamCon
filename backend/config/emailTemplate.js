@@ -201,7 +201,7 @@ export const PASSWORD_RESET_TEMPLATE = `
                       </tr>
                       <tr>
                         <td style="padding: 0 0 10px; font-size: 14px; line-height: 150%;">
-                          The password reset otp is only valid for the next 15 minutes.
+                          The password reset otp is only valid for the next 24 hours.
                         </td>
                       </tr>
                     </tbody>
