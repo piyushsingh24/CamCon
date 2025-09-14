@@ -18,7 +18,7 @@ const StudentDashboard = () => {
   const { toast } = useToast();
   const { toggleTheme, theme } = useTheme();
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_BACKEND_URL ;
 
   const [colleges, setColleges] = useState([]);
   const [mentors, setMentors] = useState([]);

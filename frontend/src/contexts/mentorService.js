@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_BACKEND_URL ; // Ensure this matches your backend URL
 
 export const fetchMentors = async () => {
   try {

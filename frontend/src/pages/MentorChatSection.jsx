@@ -48,7 +48,7 @@ const MentorChatPage = () => {
       if (!sessionId) return;
 
       try {
-        const res = await fetch("http://localhost:5000/api/sessions/me", {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sessions/me`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sessionId }),
@@ -73,7 +73,7 @@ const MentorChatPage = () => {
       if (!sessionDetails?.mentorId) return;
 
       try {
-        const res = await fetch("http://localhost:5000/api/mentors/me", {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/mentors/me`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ mentor: sessionDetails.mentorId }),
@@ -101,7 +101,7 @@ const MentorChatPage = () => {
 
       try {
         const res = await fetch(
-          `http://localhost:5000/api/messages/getMessage?senderId=${user._id}&mentorId=${id}`
+          `${import.meta.env.VITE_BACKEND_URL}/api/messages/getMessage?senderId=${user._id}&mentorId=${id}`
         );
 
         if (!res.ok) throw new Error("Failed to fetch messages");
@@ -162,7 +162,7 @@ const MentorChatPage = () => {
 
     try {
       setIsSending(true);  // ← Start loading state
-      const res = await fetch("http://localhost:5000/api/messages/sendMessage", {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/messages/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -222,7 +222,7 @@ const MentorChatPage = () => {
       if (!receiverId) throw new Error("Receiver ID missing");
 
       // Send call link as chat message
-      const res = await fetch("http://localhost:5000/api/messages/sendMessage", {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/messages/sendMessage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

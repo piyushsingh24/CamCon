@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Switch } from '../ui/switch.jsx';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover.jsx';
 
-const API_URL = 'http://localhost:5000'; 
+const API_URL = import.meta.env.VITE_BACKEND_URL; 
 
 const MentorDashboard = () => {
   const { user, logout } = useAuth();

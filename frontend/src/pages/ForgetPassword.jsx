@@ -29,8 +29,7 @@ const ForgetResetPassword = () => {
     setSuccess("");
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/auth/forgot-password`,
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/forgot-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -65,8 +64,7 @@ const ForgetResetPassword = () => {
     }
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/auth/verify-forget-password`,
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/verify-forget-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

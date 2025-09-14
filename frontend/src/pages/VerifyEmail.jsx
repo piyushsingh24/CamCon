@@ -79,8 +79,7 @@ export default function VerifyEmail() {
       setSuccess("");
 
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
-        }/api/auth/verify`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/verify`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -112,8 +111,7 @@ export default function VerifyEmail() {
     try {
       setResendLoading(true);
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
-        }/api/auth/resend-otp`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/resend-otp`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

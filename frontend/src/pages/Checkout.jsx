@@ -24,7 +24,7 @@ const CheckoutPage = () => {
     setLoading(true);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/sessions/payment/${sessionId}`, {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sessions/payment/${sessionId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

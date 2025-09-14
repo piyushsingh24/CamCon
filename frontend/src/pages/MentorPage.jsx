@@ -6,7 +6,7 @@ import { Phone, Video } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 
-const API_URL = "http://localhost:5000"; // Replace with your API base URL
+const API_URL = import.meta.env.VITE_BACKEND_URL; // Replace with your API base URL
 
 const MentorDataPage = () => {
   const { mentorId } = useParams();

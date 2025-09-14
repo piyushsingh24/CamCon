@@ -25,7 +25,7 @@ export const SocketProvider = ({ children }) => {
     if (!user) return;
 
     try {
-      socketRef.current = io(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}`, {
+      socketRef.current = io(`${import.meta.env.VITE_BACKEND_URL}`, {
         withCredentials: true,
         auth: {
           userId: user.id || user._id,
