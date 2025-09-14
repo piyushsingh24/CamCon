@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "../components/ui/button";
 import { GraduationCap, Video, MessageCircle, Shield, Star, Zap } from "lucide-react";
-import { Parallax } from 'react-scroll-parallax';
 import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
 
 const features = [

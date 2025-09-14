@@ -6,20 +6,21 @@ import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea.jsx";
 import { Pencil } from "lucide-react";
-// import { Trophy, Star, Medal } from "lucide-react";
-
-import TrophySection from "../../pages/TrophySection.jsx";
-
+import { useAuth } from "../../contexts/AuthContext.jsx";
 
 export default function MentorProfilePage() {
+
+    const { user } = useAuth();
+
+
   const [profile, setProfile] = useState({
-    name: 'John Doe',
-    email: 'student@example.com',
-    phone: '9876543210',
-    college: 'ABC University',
-    course: 'BCA',
-    year: '2nd Year',
-    about: 'Passionate student exploring full-stack development.',
+    name: user?.name ||'NA',
+    email: user?.email || 'student@example.com',
+    phone: 'NA',
+    college: user?.college || "NA",
+    course: user?.branch || "NA",
+    year:  user?.year ||'NA',
+    about: user?.bio ||'Passionate student exploring full-stack development.',
     cgpa: '8.5',
     achievements: 'Won Hackathon 2024, Open Source Contributor',
     emailVerified: false,
@@ -415,9 +416,6 @@ export default function MentorProfilePage() {
         </CardContent>
       </Card>
         
-         {/* Stepwise Achievement / Skill / Trophy Entry */}
-      <TrophySection profile={profile} updateField={updateField} />
-
       
       <Card>
         <CardHeader><CardTitle>Academic History</CardTitle></CardHeader>

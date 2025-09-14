@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
-import { useToast } from "../hooks/use-toast";
+import { useToast } from "../contexts/ToastContext.jsx";
+import { useAuth } from "../contexts/AuthContext";
 import { GraduationCap, Users } from "lucide-react";
 
 const Signup = () => {
   const [searchParams] = useSearchParams();
-  const initialRole = searchParams.get("role") || "junior";
+  const initialRole = searchParams.get("role") || "student";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,7 +25,9 @@ const Signup = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const { signup } = useAuth();
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -35,14 +38,15 @@ const Signup = () => {
     setLoading(true);
 
     try {
+      const backendRole = formData.role === "student" ? "student" : "mentor";
       let payload = {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.role,
+        role: backendRole,
       };
 
-      if (formData.role === "senior") {
+      if (formData.role === "mentor") {
         payload = {
           ...payload,
           college: formData.college,
@@ -52,25 +56,20 @@ const Signup = () => {
         };
       }
 
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const result = await signup(
+        formData.email,
+        formData.password,
+        formData.name,
+        formData.role,
+        formData.college,
+        formData.role === "mentor" ? { branch: formData.branch, year: formData.year, bio: formData.bio } : {}
+      );
 
-      if (!response.ok) {
-        const errRes = await response.json();
-        throw new Error(errRes.message || "Failed to sign up");
+      if (result.success && result.user) {
+        const backendRole = result.user.role;
+        navigate("/verify-email", { state: { userId: result.user.id || result.user._id, role: backendRole } });
+        return;
       }
-
-      await response.json();
-      toast({
-        title: "Account Created Successfully!",
-        description: `Welcome to CamCon, ${formData.name}!`,
-      });
-
-      // Optionally redirect
-      // navigate("/login");
     } catch (error) {
       toast({
         title: "Signup Failed",
@@ -114,10 +113,10 @@ const Signup = () => {
                   className="grid grid-cols-2 gap-4"
                 >
                   <label
-                    htmlFor="junior"
+                    htmlFor="student"
                     className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-blue-50 cursor-pointer"
                   >
-                    <RadioGroupItem value="junior" id="junior" />
+                    <RadioGroupItem value="student" id="student" />
                     <GraduationCap className="h-5 w-5 text-blue-500" />
                     <div>
                       <p className="font-medium">College Aspirant</p>
@@ -126,10 +125,10 @@ const Signup = () => {
                   </label>
 
                   <label
-                    htmlFor="senior"
+                    htmlFor="mentor"
                     className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-orange-50 cursor-pointer"
                   >
-                    <RadioGroupItem value="senior" id="senior" />
+                    <RadioGroupItem value="mentor" id="mentor" />
                     <Users className="h-5 w-5 text-orange-500" />
                     <div>
                       <p className="font-medium">College Student</p>
@@ -181,8 +180,8 @@ const Signup = () => {
                 />
               </div>
 
-              {/* Senior-specific */}
-              {formData.role === "senior" && (
+              {/* Mentor-specific */}
+              {formData.role === "mentor" && (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">

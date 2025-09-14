@@ -4,7 +4,7 @@ import crypto from "crypto";
 
 const userSchema = new mongoose.Schema(
   {
-    // 🔹 Basic details
+    // Basic details
     name: {
       type: String,
       required: true,
@@ -16,44 +16,15 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
-    Mobile :{
-      type:Number,
-      unique:true,
-      minlength:10,
-      maxlength:10
+    role:{
+      type:String,
+      enum:["student","mentor"],
     },
     password: {
       type: String,
       required: true,
       minlength: 6,
     },
-    bio: {
-      type: String,
-      maxlength: 500,
-    },
-    
-    // 🔹 Profile & availability
-    profilePicture: {
-      type: String,
-      default: "",
-    },
-    isProfileCompleted: {
-      type: Boolean,
-      default: false,
-    },
-    //Mobile number Verified
-    // isMobileVerified:{
-      
-    // },
-    // VerifyMobileOtp:{
-
-    // },
-    // MobileVerifyExpiry:{
-
-    // },
-
-
-
     // Email Verification
     isVerified: {
       type: Boolean,

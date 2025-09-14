@@ -1,67 +1,171 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from "./components/ui/toaster.jsx";
-import { useAuth } from './contexts/AuthContext.jsx';
+import { SimpleToaster } from "./components/ui/simple-toast.jsx";
+import { AuthWrapper } from "./components/AuthWrapper.jsx";
+import { useAuth } from "./contexts/AuthContext.jsx"
+import { Routes, Route, Navigate } from "react-router-dom";
 
-import Index from './pages/Index';
-import Login from './pages/login.jsx';
-import Signup from './pages/signup.jsx';
-import StudentDashboard from './components/dashboard/StudentDashboard';
-import MentorDashboard from './components/dashboard/MentorDashboard';
-import NotFound from './pages/NotFound';
-import LearnMore from './pages/LearnMore.jsx';
-import StudentProfile from './components/Profile/StudentProfile.jsx';
-import MentorChatPage from './pages/MentorChatSection.jsx';
-import MentorProfilePage from './components/Profile/MentorProfile.jsx';
-import GoogleFormPopup from './components/GoogleFormPopup.jsx'; // ✅ Popup component
 
-// ✅ ProtectedRoute component
-const ProtectedRoute = ({ children, allowedRole }) => {
-  const { user, loading } = useAuth();
+// Pages & Components
+import Index from "./pages/Index";
+import Login from "./pages/login.jsx";
+import Signup from "./pages/signup.jsx";
+import VerifyEmail from "./pages/VerifyEmail.jsx";
+import StudentDashboard from "./components/dashboard/StudentDashboard.jsx";
+import MentorDashboard from "./components/dashboard/MentorDashboard.jsx";
+import NotFound from "./pages/NotFound";
+import LearnMore from "./pages/LearnMore.jsx";
+import StudentProfile from "./components/Profile/StudentProfile.jsx";
+import MentorChatPage from "./pages/MentorChatSection.jsx";
 
-  if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  if (allowedRole && user.role !== allowedRole) {
-    return <Navigate to="/" />;
-  }
-
-  return children;
-};
+import MentorProfilePage from "./components/Profile/MentorProfile.jsx";
+import Forgetpassword from "./pages/ForgetPassword.jsx";
+import CheckoutPage from "./pages/Checkout.jsx";
+import MentorDataPage from "./pages/MentorPage.jsx";
+import CallPage from "./pages/CallPage.jsx"
 
 function App() {
+
+   const { user, loading } = useAuth();
+
+  const ProtectedRoute = ({ children }) => {
+    if (loading) return <div>Loading...</div>;
+    if (!user) return <Navigate to="/login" replace />;
+    return children;
+  };
+
+
   return (
-    <Router>
-      <div className="min-h-screen bg-background">
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/learnMore" element={<LearnMore />} />
+    <div className="min-h-screen bg-background">
+      <Routes>
+        {/* ✅ Public Routes */}
+        <Route
+          path="/"
+          element={
+            <AuthWrapper requireAuth={false}>
+              <Index />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <AuthWrapper requireAuth={false}>
+              <Login />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <AuthWrapper requireAuth={false}>
+              <Signup />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/verify-email"
+          element={
+            <AuthWrapper requireAuth={false}>
+              <VerifyEmail />
+            </AuthWrapper>
+          }
+        />
+         <Route
+          path="/forgot-password"
+          element={
+            <AuthWrapper requireAuth={false}>
+              <Forgetpassword />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/learnMore"
+          element={
+            <AuthWrapper requireAuth={false}>
+              <LearnMore />
+            </AuthWrapper>
+          }
+        />
 
-           {/* Optional: wrap these in <ProtectedRoute> if needed */}
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
-          <Route path="/mentor/dashboard" element={<MentorDashboard />} />
-          <Route path="/student/profile" element={<StudentProfile />} />
-          <Route path="/mentor/profile" element={<MentorProfilePage />} />
-          <Route path="/mentor/:id" element={<MentorChatPage />} />
+        {/* ✅ Student Routes */}
+        <Route
+          path="/student/dashboard"
+          element={
+            <AuthWrapper requireAuth={true} allowedRoles={["student"]}>
+              <StudentDashboard />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/student/profile"
+          element={
+            <AuthWrapper requireAuth={true} allowedRoles={["student"]}>
+              <StudentProfile />
+            </AuthWrapper>
+          }
+        />
 
-          {/* 404 Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        {/* ✅ Mentor Routes */}
+        <Route
+          path="/mentor/dashboard"
+          element={
+            <AuthWrapper requireAuth={true} allowedRoles={["mentor"]}>
+              <MentorDashboard />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/mentor/profile"
+          element={
+            <AuthWrapper requireAuth={true} allowedRoles={["mentor"]}>
+              <MentorProfilePage />
+            </AuthWrapper>
+          }
+        />
 
-       
-        <GoogleFormPopup />
+        <Route
+          path="/mentor/data/:mentorId"
+          element={
+            <AuthWrapper requireAuth={true}>
+              <MentorDataPage />
+            </AuthWrapper>
+          }
+        />
 
-       
-        <Toaster />
-      </div>
-    </Router>
+        <Route
+          path="/payment/:sessionId"
+          element={
+            <AuthWrapper requireAuth={true}>
+              <CheckoutPage />
+            </AuthWrapper>
+          }
+        />   
+        {/* //chat  */}
+        <Route
+          path="/mentor/:sessionId"
+          element={
+            <AuthWrapper requireAuth={true}>
+              <MentorChatPage />
+            </AuthWrapper>
+          }
+        />   
+
+        <Route
+          path="call/:sessionId"
+          element={
+            <AuthWrapper requireAuth={true}>
+              <CallPage />
+            </AuthWrapper>
+          }
+        />     
+
+        
+        {/* ✅ 404 */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+
+      {/* ✅ Toast Notifications */}
+      <SimpleToaster />
+    </div>
   );
 }
 

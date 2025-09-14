@@ -1,76 +1,47 @@
 import mongoose from "mongoose"
+import { type } from "os"
 
 const sessionSchema = new mongoose.Schema(
   {
-    Student: {
+    studentId: { 
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      ref: 'Student', 
+      required: true 
     },
-    Mentor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+    mentorId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Mentor', 
+      required: true 
     },
-    college: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "College",
-      required: true,
+    studentName:{
+      type:String,
+      default:"Student"
+    },
+    mentorName:{
+      type : String,
+      default:"Mentor"
     },
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected", "ongoing", "completed", "cancelled"],
+      enum: ["requested" , "accepted", "rejected", "ongoing", "completed", "scheduled"],
       default: "pending",
-    },
-    sessionType: {
-      type: String,
-      enum: ["chat", "video"],
-      default: "chat",
-    },
-    duration: {
-      type: Number, // in minutes
-      default: 0,
     },
     amount: {
       type: Number,
-      required: true,
       default: 99,
+    },
+    isPaymentDone:{
+      type:Boolean,
+      default:false,
     },
     paymentId: {
       type: String,
-      required: true,
     },
     startTime: {
       type: Date,
     },
     endTime: {
       type: Date,
-    },
-    messages: [
-      {
-        sender: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        message: {
-          type: String,
-          required: true,
-        },
-        timestamp: {
-          type: Date,
-          default: Date.now,
-        },
-        messageType: {
-          type: String,
-          enum: ["text", "image", "file"],
-          default: "text",
-        },
-      },
-    ],
-    notes: {
-      type: String,
-      maxlength: 1000,
     },
   },
   {

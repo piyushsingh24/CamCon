@@ -1,29 +1,54 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button.jsx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card.jsx";
-import { useToast } from "../hooks/use-toast.js";
-// import { useToast, toast } from "../hooks/use-toast"; // use correct relative path
-
+import { useToast } from "../contexts/ToastContext.jsx";
+import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const result = await login(email, password);
+
+      if (result.user) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back to CamCon!",
+        });
+
+        // AuthContext will automatically redirect to appropriate dashboard
+        // No need for manual navigation here
+      }
+    } catch (err) {
+      // Check if it's an email verification error
+      if (err.message.includes("not verified") || err.message.includes("verification")) {
+        toast({
+          title: "Email Not Verified",
+          description: "Please verify your email before logging in.",
+          variant: "destructive",
+        });
+        // You might want to redirect to verify-email here if you have the userId
+        return;
+      }
+
       toast({
-        title: "Login Successful",
-        description: "Welcome back to CamCon!",
+        title: "Login failed",
+        description: err.message || "Failed to fetch",
+        variant: "destructive",
       });
+    } finally {
       setLoading(false);
-      console.log(email , password)
-    }, 1000);
+    }
   };
 
   return (
@@ -51,7 +76,10 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-gray-700 block">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700 block"
+                >
                   Email
                 </label>
                 <input
@@ -65,7 +93,10 @@ const Login = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-gray-700 block">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700 block"
+                >
                   Password
                 </label>
                 <input
@@ -87,10 +118,20 @@ const Login = () => {
               </Button>
             </form>
 
+            <div className="text-right mt-1">
+              <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
+
+
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link to="/signup" className="text-blue-600 hover:underline font-medium">
+                <Link
+                  to="/signup"
+                  className="text-blue-600 hover:underline font-medium"
+                >
                   Sign up
                 </Link>
               </p>

@@ -1,115 +1,156 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
 
-  useEffect(() => {
-    // Check for existing user session
-    const storedUser = localStorage.getItem('campusconnect_user');
-    const storedToken = localStorage.getItem('campusconnect_token');
-    
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+  // ✅ Check authentication status
+  const checkAuth = async () => {
+    if (isChecking) return null;
+
+    setIsChecking(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/me", {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        return data.user;
+      } else {
+        setUser(null);
+        return null;
+      }
+    } catch (error) {
+      console.error("Auth check error:", error);
+      setUser(null);
+      return null;
+    } finally {
+      setLoading(false);
+      setIsChecking(false);
     }
-    setLoading(false);
-  }, []);
+  };
 
-  const login = async (email, password, role) => {
+  // ✅ Login
+  const login = async (email, password) => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || "Login failed");
       }
 
-      setUser(data.user);
-      localStorage.setItem('campusconnect_user', JSON.stringify(data.user));
-      localStorage.setItem('campusconnect_token', data.token);
+      const normalizedUser = {
+        ...data.user,
+        role:
+          data.user.role === "student"
+            ? "student"
+            : data.user.role === "mentor"
+            ? "mentor"
+            : data.user.role,
+      };
+
+      setUser(normalizedUser);
+      return { user: normalizedUser, token: data.token };
     } catch (error) {
-      throw new Error(error.message || 'Login failed');
+      throw new Error(error.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const signup = async (email, password, name, role, college) => {
+  // ✅ Signup
+  const signup = async (
+    email,
+    password,
+    name,
+    role,
+    college,
+    extras = {}
+  ) => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, name, role, college }),
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          role: role === "student" ? "student" : "mentor",
+          college,
+          ...extras,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Signup failed');
+        throw new Error(data.message || "Signup failed");
       }
 
-      setUser(data.user);
-      localStorage.setItem('campusconnect_user', JSON.stringify(data.user));
-      localStorage.setItem('campusconnect_token', data.token);
+      return { user: data.user, success: true };
     } catch (error) {
-      throw new Error(error.message || 'Signup failed');
+      throw new Error(error.message || "Signup failed");
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Logout
   const logout = async () => {
     try {
-      const token = localStorage.getItem('campusconnect_token');
-      if (token) {
-        await fetch('http://localhost:5000/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-      }
+      await fetch("http://localhost:5000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       setUser(null);
-      localStorage.removeItem('campusconnect_user');
-      localStorage.removeItem('campusconnect_token');
     }
   };
 
   const userRole = user?.role || null;
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      userRole,
-      login,
-      signup,
-      logout,
-      loading,
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        userRole,
+        login,
+        signup,
+        logout,
+        checkAuth,
+        loading,
+        setUser,
+        isChecking,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

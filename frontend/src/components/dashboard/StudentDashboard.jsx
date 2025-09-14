@@ -1,5 +1,4 @@
-// StudentDashboard.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Star, MessageCircle, Clock, Users, LogOut, Sun, Moon, User, Search } from 'lucide-react';
 import { Button } from "../ui/button.jsx";
@@ -9,149 +8,98 @@ import { Input } from "../ui/input.jsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.jsx";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu.jsx";
 import { useAuth } from "../../contexts/AuthContext.jsx";
-import { useToast } from "../../hooks/use-toast.js";
+import { useToast } from "../../contexts/ToastContext.jsx";
 import { useTheme } from "../../contexts/ThemeContext.jsx";
-
-
-export const colleges = [
-  'IIT Delhi', 'IIT Bombay', 'IIT Madras', 'IIT Kanpur', 'IIT Kharagpur',
-  'BITS Pilani', 'NIT Trichy', 'IIIT Hyderabad', 'DTU Delhi', 'NSUT Delhi',
-  'IIT Roorkee', 'IIT Guwahati', 'IIT BHU', 'IIT Indore', 'IIT Gandhinagar',
-  'IIIT Bangalore', 'IIIT Delhi', 'IIIT Allahabad', 'NIT Surathkal', 'NIT Warangal',
-  'NIT Rourkela', 'NIT Calicut', 'NIT Jaipur', 'VIT Vellore', 'SRM Institute of Science and Technology',
-  'Manipal Institute of Technology', 'Amrita Vishwa Vidyapeetham', 'Shiv Nadar University',
-  'Jadavpur University', 'University of Hyderabad'
-];
-
-export const mentors = [
-  {
-    id: 1,
-    name: "Ananya Sharma",
-    college: "IIT Delhi",
-    email: "ananya.sharma@example.com",
-    course: "Computer Science",
-    year: "3rd Year",
-    expertise: "Web Development",
-    rating: 4.8,
-    sessions: 35,
-    isOnline: true,
-    price: 99,
-    specialties: ["React", "JavaScript", "UI/UX"],
-  },
-  {
-    id: 2,
-    name: "Ravi Mehta",
-    college: "NIT Trichy",
-    email: "ravi.mehta@example.com",
-    course: "Electronics & Communication",
-    year: "Final Year",
-    expertise: "Data Structures & Algorithms",
-    rating: 4.6,
-    sessions: 50,
-    isOnline: false,
-    price: 99,
-    specialties: ["product design", "marketing ", "communication"],
-  },
-  {
-    id: 3,
-    name: "Sneha Kapoor",
-    college: "IIIT Hyderabad",
-    email: "sneha.kapoor@example.com",
-    course: "Artificial Intelligence",
-    year: "2nd Year",
-    expertise: "Machine Learning",
-    rating: 4.9,
-    sessions: 60,
-    isOnline: true,
-    price: 99,
-    specialties: ["event organiser", "public speaking", "college president"],
-  },
-  {
-    id: 4,
-    name: "Arjun Verma",
-    college: "BITS Pilani",
-    email: "arjun.verma@example.com",
-    course: "Information Systems",
-    year: "3rd Year",
-    expertise: "DevOps",
-    rating: 4.7,
-    sessions: 42,
-    isOnline: false,
-    price: 99,
-    specialties: ["Docker", "AWS", "CI/CD"],
-  },
-  {
-    id: 5,
-    name: "Priya Singh",
-    college: "VIT Vellore",
-    email: "priya.singh@example.com",
-    course: "Cybersecurity",
-    year: "Final Year",
-    expertise: "Cybersecurity",
-    rating: 4.5,
-    sessions: 38,
-    isOnline: true,
-    price: 99,
-    specialties: ["Ethical Hacking", "Network Security", "Linux"],
-  },
-];
-
-const acceptedMentors = [mentors[0], mentors[2]];
-const scheduledMentors = [mentors[1]];
+import { fetchMentors } from '../../contexts/mentorService.js';
+import PaymentModal from '../../pages/Checkout.jsx'
 
 const StudentDashboard = () => {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const { toggleTheme, theme } = useTheme();
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  const [selectedCollege, setSelectedCollege] = useState('');
+  const [colleges, setColleges] = useState([]);
+  const [mentors, setMentors] = useState([]);
+  const [acceptedSessions, setAcceptedSessions] = useState([]);
+  const [scheduledSessions, setScheduledSessions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [requestedMentors, setRequestedMentors] = useState([]);
+  const [selectedCollege, setSelectedCollege] = useState('');
+  const [requestedMentorIds, setRequestedMentorIds] = useState([]);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
+  // Load mentors
+  useEffect(() => {
+    const loadMentors = async () => {
+      const data = await fetchMentors();
+      if (data) setMentors(data.mentors);
+      else setMentors([]);
+    };
+    loadMentors();
+  }, []);
+
+  // Load sessions
+  useEffect(() => {
+    const fetchSessions = async () => {
+      const res = await fetch(`${API_URL}/api/sessions/student/${user._id}`);
+      const data = await res.json();
+      console.log(data)
+      if (data.sessions) {
+        setAcceptedSessions(data.sessions.filter(s => s.status === 'accepted'));
+        setScheduledSessions(data.sessions.filter(s => s.status === 'scheduled'));
+        setRequestedMentorIds(data.sessions.filter(s => s.status === 'requested').map(s => s.mentorId));
+      }
+    };
+
+    fetchSessions();
+  });
 
   const filteredMentors = mentors.filter(mentor =>
     (!selectedCollege || mentor.college === selectedCollege) &&
-    (!searchTerm || mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mentor.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mentor.specialties.some(s => s.toLowerCase().includes(searchTerm.toLowerCase())))
+    (!searchTerm ||
+      mentor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      mentor.course?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      mentor.specialties?.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
   );
 
-  const handleBookSession = (mentor) => {
-    toast({
-      title: "Session Requested",
-      description: `Waiting for ${mentor.name}'s acceptance...`,
+  // Handle Request Session 
+  const handleBookSession = async (mentor, name) => {
+    const res = await fetch(`${API_URL}/api/sessions/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId: user._id, mentorId: mentor, mentorName: name, studentName: user.name }),
+      credentials: 'include'
     });
 
-    setRequestedMentors((prev) => [...prev, mentor.id]);
+    if (res.ok) {
+      toast({
+        title: "Session Requested",
+        description: `Waiting for Mentor acceptance.`
+      });
+      setRequestedMentorIds(prev => [...prev, mentor._id]);
+    } else {
+      const errorData = await res.json();
+      toast({
+        title: "Error",
+        description: errorData.error || "Failed to request session."
+      });
+    }
   };
 
 
-
-  const [acceptedMentors, setAcceptedMentors] = useState([
-    { id: 1, name: "Aman Tiwari", college: "IIT Delhi" },
-    { id: 2, name: "Sneha Joshi", college: "NIT Trichy" },
-  ]);
-
-  const [scheduledMentors, setScheduledMentors] = useState([
-    { id: 3, name: "Raghav Rao", course: "CSE" },
-  ]);
-
-  const handlePayment = (mentor) => {
-    setScheduledMentors((prev) => [
-      ...prev,
-      {
-        id: mentor.id,
-        name: mentor.name,
-        course: mentor.college, // You can adjust this field if needed
-      },
-    ]);
-
-    setAcceptedMentors((prev) => prev.filter((m) => m.id !== mentor.id));
+  const handlePayment = async (sessionId) => {
+    navigate(`/payment/${sessionId}`)
   };
 
   return (
+
+
     <div className="min-h-screen bg-gray-200">
+
+
+
       <header className="bg-gray-100 border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
@@ -165,30 +113,32 @@ const StudentDashboard = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="rounded-full">
-                <img
-                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'U'}`}
-                  alt="profile"
-                  className="w-8 h-8 rounded-full"
-                />
+                <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'U'}`} alt="profile" className="w-8 h-8 rounded-full" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>{user?.name || "User"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/student/profile")}> <User className="h-4 w-4 mr-2" /> Profile </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/student/profile")}>
+                <User className="h-4 w-4 mr-2" /> Profile
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={toggleTheme}>
                 {theme === 'dark'
                   ? <><Sun className="h-4 w-4 mr-2" /> Light Mode</>
                   : <><Moon className="h-4 w-4 mr-2" /> Dark Mode</>}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}> <LogOut className="h-4 w-4 mr-2" /> Logout </DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>
+                <LogOut className="h-4 w-4 mr-2" /> Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
+
+        {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="flex justify-between items-center">
@@ -224,26 +174,26 @@ const StudentDashboard = () => {
           </Card>
         </div>
 
-        <div className="mb-7 grid md:grid-cols-2 gap-6">
+        {/* Accepted & Scheduled Sessions */}
+        <div className="mb-7 grid md:grid-cols-2 gap-6 ">
+
           <Card>
             <CardHeader>
               <CardTitle className="animate-bounce">Accepted Requests</CardTitle>
-              <CardDescription>These mentors accepted your request</CardDescription>
+              <CardDescription>Mentors accepted your session request</CardDescription>
             </CardHeader>
             <CardContent>
-              {acceptedMentors.length === 0 ? (
-                <p className="text-sm text-gray-500">No accepted mentors yet.</p>
+              {acceptedSessions.length === 0 ? (
+                <p className="text-sm text-gray-500">No accepted sessions yet.</p>
               ) : (
-                acceptedMentors.map((m) => (
-                  <div key={m.id} className="mb-4 text-sm">
-                    <div className="flex justify-between items-center">
-                      <a href={`/mentor/${m.id}`}>
-                        <span>{m.name} ({m.college})</span>
-                      </a>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="success">Accepted</Badge>
-                        <Button size="sm" onClick={() => handlePayment(m)}>Pay Now</Button>
-                      </div>
+                acceptedSessions.map((s) => (
+                  <div key={s._id} className="mb-4 text-sm flex justify-between items-center">
+                    <a href={`/mentor/${s.mentorId}`}>
+                      <span className='font-semibold text-lg'>{s.mentorName}</span>
+                    </a>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="success">Accepted</Badge>
+                      <Button size="sm" onClick={() => { handlePayment(s._id) }}>Pay Now</Button>
                     </div>
                   </div>
                 ))
@@ -251,39 +201,49 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
 
-
-          <Card>
+          <Card >
             <CardHeader>
               <CardTitle className="animate-bounce">Scheduled Sessions</CardTitle>
               <CardDescription>Your upcoming mentor calls</CardDescription>
             </CardHeader>
             <CardContent>
-              {scheduledMentors.length === 0 ? (
-                <p className="text-sm text-gray-500">No sessions scheduled.</p>
+              {scheduledSessions.length === 0 ? (
+                <p className="text-sm text-gray-500">No scheduled sessions.</p>
               ) : (
-                scheduledMentors.map((m) => (
-                  <a key={m.id} href={`/mentor/${m.id}`} className="cursor-pointer">
-                    <div className="mb-2 text-sm flex justify-between">
-                      <span>{m.name} ({m.course})</span>
-                      <Badge variant="default">Tomorrow 5PM</Badge>
+                scheduledSessions.map((s) => (
+                  <a key={s._id} className="cursor-pointer">
+                    <div className="mb-2 text-sm flex justify-between text-black border-2 p-2 rounded-md">
+                      <div>
+                        <span className='font-semibold text-lg mr-1'>{s.mentorName}</span>
+                      </div>
+                      <Badge variant="default">
+                        <a onClick={() => { navigate(`/mentor/${s._id}`) }}>Connect</a>
+                      </Badge>
                     </div>
                   </a>
                 ))
               )}
             </CardContent>
           </Card>
+
         </div>
 
+        {/* Search Mentors */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Find Your Perfect Mentor</CardTitle>
-            <CardDescription>Search by college, course, or mentor specialties</CardDescription>
+            <CardDescription>Search by college, course, or specialties</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input placeholder="Search mentors, courses, or specialties..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                <Input
+                  placeholder="Search mentors, courses, or specialties..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
               <Select value={selectedCollege} onValueChange={setSelectedCollege}>
                 <SelectTrigger className="w-full md:w-2/4">
@@ -299,9 +259,10 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Mentor Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMentors.map(mentor => (
-            <Card key={mentor.id} className="relative">
+          {filteredMentors.map((mentor) => (
+            <Card key={mentor._id} className="relative">
               {mentor.isOnline && (
                 <Badge className="absolute top-4 right-4 bg-green-500 text-white">Online</Badge>
               )}
@@ -311,33 +272,36 @@ const StudentDashboard = () => {
                 <p className="text-sm text-blue-600">{mentor.college}</p>
                 <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                   <span className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-500" /> {mentor.rating}
+                    <Star className="w-4 h-4 text-yellow-500" /> {mentor.rating?.average || 0}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" /> {mentor.sessions} sessions
+                    <Clock className="w-4 h-4" /> {mentor.sessions || 0} sessions
                   </span>
                 </div>
               </CardHeader>
+
               <CardContent>
                 <div className="mb-2 text-sm">Specialties:</div>
                 <div className="flex flex-wrap gap-1 mb-4">
-                  {mentor.specialties.map(spec => (
+                  {mentor.specialties?.map((spec) => (
                     <Badge key={spec} variant="secondary" className="text-xs">{spec}</Badge>
                   ))}
                 </div>
-                <div className="text-2xl font-bold text-green-600 mb-2">₹{mentor.price}</div>
+
+                <div className="text-2xl font-bold text-green-600 mb-2">₹{mentor.price || 99}</div>
+
                 <div className="space-y-2">
-                  {requestedMentors.includes(mentor.id) ? (
+                  {requestedMentorIds.includes(mentor._id) ? (
                     <div className="w-full text-center text-sm text-orange-600 font-medium border border-orange-400 rounded-md py-2">
                       ⏳ Waiting for acceptance...
                     </div>
                   ) : (
-                    <Button className="w-full" onClick={() => handleBookSession(mentor)}>
+                    <Button className="w-full" onClick={() => handleBookSession(mentor._id, mentor.name)}>
                       <MessageCircle className="w-4 h-4 mr-2" /> Request Session
                     </Button>
                   )}
 
-                  <Button variant="outline" className="w-full" onClick={() => navigate(`/mentor/${mentor.id}`)}>
+                  <Button variant="outline" className="w-full" onClick={() => navigate(`/mentor/data/${mentor._id}`)}>
                     <User className="w-4 h-4 mr-2" /> View Profile
                   </Button>
                 </div>
@@ -350,10 +314,13 @@ const StudentDashboard = () => {
           <Card className="text-center py-8 mt-8">
             <CardContent>
               <p className="text-gray-500 mb-4">No mentors found matching your criteria</p>
-              <Button onClick={() => { setSelectedCollege(''); setSearchTerm(''); }}>Clear Filters</Button>
+              <Button onClick={() => { setSelectedCollege(''); setSearchTerm(''); }}>
+                Clear Filters
+              </Button>
             </CardContent>
           </Card>
         )}
+
       </div>
     </div>
   );

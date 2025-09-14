@@ -6,9 +6,8 @@ import { GraduationCap, Users, Video, MessageCircle, Star, TrendingUp, Shield, Z
 import { useAuth } from "../contexts/AuthContext.jsx";
 import StudentDashboard from "../components/dashboard/StudentDashboard.jsx";
 import MentorDashboard from "../components/dashboard/MentorDashboard.jsx";
-import { authAPI } from "../components/auth/authModel.jsx";
 import { motion } from "framer-motion";
-import GoogleFormPopup from "../components/GoogleFormPopup.jsx"
+  
 
 const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -63,8 +62,6 @@ const Index = () => {
         </div>
       </header>
 
-     <GoogleFormPopup triggerText="Apply Now" />
-
       <section className="container mx-auto px-4 py-20 text-center">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -88,7 +85,6 @@ const Index = () => {
             Make the right college choice with guidance from those who've been there.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {/* <a href={userRole === "student" ? "/student/dashboard" : "/login"}> */}
             <a href="/student/dashboard">
               <Button
                 size="lg"
@@ -98,9 +94,7 @@ const Index = () => {
                 Find Your Mentor
               </Button>
             </a>
-            {/* </a> */}
 
-            {/* <a href={userRole === "mentor" ? "/mentor/dashboard" : "/login"}> */}
             <a href="/mentor/dashboard">
 
               <Button
@@ -112,7 +106,6 @@ const Index = () => {
                 Become a Mentor
               </Button>
             </a>
-            {/* </a> */}
           </div>
         </motion.div> 
       </section>
@@ -265,8 +258,6 @@ const Index = () => {
           </div>
         </div>
       </motion.footer>
-
-      {/* {async ()=>{await authAPI.login("piyushsingh2706@gmail.com" , "piyush" ,"student")}} */}
     </div>
   );
 };

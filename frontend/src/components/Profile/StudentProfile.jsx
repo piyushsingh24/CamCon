@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useReducer, useState } from 'react';
 import { Button } from "../ui/button.jsx";
 import { Input } from "../ui/input.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -6,16 +6,23 @@ import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea.jsx";
 import { Pencil } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext.jsx";
+
+
+
 
 export default function StudentProfilePage() {
+
+  const { user } = useAuth();
+  
   const [profile, setProfile] = useState({
-    name: 'John Doe',
-    email: 'student@example.com',
-    phone: '9876543210',
+    name: user.name,
+    email: user?.email || "xyz.@gmail.com",
+    phone: "NA",
     college: 'ABC University',
     course: 'BCA',
     year: '2nd Year',
-    about: 'Passionate student exploring full-stack development.',
+    about:  user?.bio ||'Passionate student exploring full-stack development.',
     cgpa: '8.5',
     achievements: 'Won Hackathon 2024, Open Source Contributor',
     emailVerified: false,

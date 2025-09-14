@@ -1,9 +1,6 @@
 import express from "express"
-import College from "../models/College.js"
-import User from "../models/User.js"
 
 const router = express.Router()
-
 
 // Get all active colleges at once
 router.get("/", async (req, res) => {
@@ -15,8 +12,6 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Unable to fetch colleges. Please try again later." });
   }
 });
-
-
 
 // Get college by ID with available seniors
 router.get("/:id", async (req, res) => {

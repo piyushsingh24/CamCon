@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { type } from "os";
 
 const userSchema = new mongoose.Schema(
   {
@@ -23,7 +24,6 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ["student", "mentor"],
-      required: true,
     },
 
     // 🔹 Senior-specific details
@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     year: {
-      type: Number,
+      type: String,
     },
     bio: {
       type: String,
@@ -95,6 +95,11 @@ const userSchema = new mongoose.Schema(
     resetPasswordExpiry: {
       type: Date,
     },
+
+    SessionId:{
+      type:Array,
+      default:[]
+    }
   },
   {
     timestamps: true,
@@ -103,7 +108,6 @@ const userSchema = new mongoose.Schema(
 
 //
 // 🔑 Middleware: Hash password before save
-//
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   try {
