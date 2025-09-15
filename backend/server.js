@@ -17,25 +17,10 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://camcon-frontend.onrender.com"
-];
 
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (e.g., Postman)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      callback(null, origin); // must return exact origin, not true
-    } else {
-      callback(new Error("CORS policy violation: Origin not allowed"));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  origin: "https://camcon-frontend.onrender.com", // only your frontend
+  credentials: true, // allow cookies
 }));
 
 // Setup Socket.IO with same CORS config

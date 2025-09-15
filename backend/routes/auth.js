@@ -154,8 +154,8 @@ router.post("/login", async (req, res) => {
     //its help to set the cookie
     res.cookie("token", token, {
       httpOnly: true, //only  http request can access this cookie 
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? 'none' : "strict",
+      secure: process.env.NODE_ENV == "production",
+      sameSite: process.env.NODE_ENV == "production" ? 'none' : "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000 // maximum age or limit to store the cookie 
     })
 
