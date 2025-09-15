@@ -17,10 +17,10 @@ export const AuthWrapper = ({
   requireAuth = false,
   allowedRoles = [],
 }) => {
-  const { user, loading, checkAuth } = useAuth();
+  const { user, loading, checkAuth , isChecking } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isChecking, setIsChecking] = useState(true);
+  // const [isChecking, setIsChecking] = useState(true)
 
   // 🔄 Run checkAuth only once when auth is loading is done
   useEffect(() => {
@@ -97,7 +97,7 @@ export const AuthWrapper = ({
   ]);
 
   // ⏳ While checking auth or fetching session
-  if (loading || !isChecking) {
+  if (loading || isChecking) {
     return <LoadingSpinner />;
   }
 

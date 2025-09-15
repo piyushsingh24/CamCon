@@ -66,18 +66,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Failed to retrieve user after login");
       }
 
-      setUser(userFromServer);
-      // const normalizedUser = {
-      //   ...data.user,
-      //   role:
-      //     data.user.role === "student"
-      //       ? "student"
-      //       : data.user.role === "mentor"
-      //         ? "mentor"
-      //         : data.user.role,
-      // };
-
-      // setUser(normalizedUser);
+      setUser(userFromServer);  
+    
       return { user: userFromServer, token: data.token };
     } catch (error) {
       throw new Error(error.message || "Login failed");
