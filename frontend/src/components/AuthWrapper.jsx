@@ -25,18 +25,14 @@ export const AuthWrapper = ({
   // 🔄 Run checkAuth only once when auth is loading is done
   useEffect(() => {
     const verifyAuth = async () => {
-      if (!loading) {
-        try {
-          await checkAuth(); // ensure token/session is valid
-        } catch (error) {
-          console.error("Auth check failed:", error);
-        } finally {
-          setIsChecking(false);
-        }
-      }
+      if (!isChecking) return;
+
+      await checkAuth();  // Always run this; rely on cookies being present or not
     };
+
     verifyAuth();
-  }, [loading, checkAuth]);
+  }, []);
+
 
   // 🚀 Handle all redirects
   useEffect(() => {
@@ -101,7 +97,7 @@ export const AuthWrapper = ({
   ]);
 
   // ⏳ While checking auth or fetching session
-  if (loading || isChecking) {
+  if (loading || !isChecking) {
     return <LoadingSpinner />;
   }
 

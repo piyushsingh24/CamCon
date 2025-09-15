@@ -12,14 +12,11 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
-
+  const [loading, setLoading] = useState(true);
+  const [isChecking, setIsChecking] = useState(true); 
   // ✅ Check authentication status
   const checkAuth = async () => {
-    if (isChecking) return null;
-
-    setIsChecking(true);
+    
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/me`, {
         method: "GET",
@@ -28,17 +25,20 @@ export const AuthProvider = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("checkAuth user data:", data.user);
         setUser(data.user);
         return data.user;
       } else {
+        console.warn("checkAuth failed, status:", response.status);
         setUser(null);
         return null;
       }
     } catch (error) {
-      console.error("Auth check error:", error);
+      console.error("checkAuth error:", error);
       setUser(null);
       return null;
     } finally {
+      console.log("checkAuth completed");
       setLoading(false);
       setIsChecking(false);
     }
@@ -63,14 +63,19 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.message || "Login failed");
       }
 
+      const userFromServer = await checkAuth();
+      if (!userFromServer) {
+        throw new Error("Failed to retrieve user after login");
+      }
+
       const normalizedUser = {
         ...data.user,
         role:
           data.user.role === "student"
             ? "student"
             : data.user.role === "mentor"
-            ? "mentor"
-            : data.user.role,
+              ? "mentor"
+              : data.user.role,
       };
 
       setUser(normalizedUser);
