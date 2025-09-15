@@ -20,7 +20,7 @@ const app = express();
 const server = createServer(app)
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true,
   },
@@ -85,6 +85,9 @@ io.on('connection', (socket) => {
   });
 });
 
+app.get("/", (req, res) => {
+  res.send("CamCon Backend is running")
+})
 
 // // Error handling middleware
 app.use((err, req, res, next) => {

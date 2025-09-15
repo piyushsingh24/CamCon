@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
     setIsChecking(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/me`, {
+        method: "GET",
         credentials: "include",
       });
 
