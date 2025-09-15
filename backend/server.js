@@ -22,14 +22,15 @@ const allowedOrigins = [
   "https://camcon-frontend.onrender.com"
 ];
 
-// Setup CORS middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);  // Allow Postman, etc.
+  origin: function(origin, callback) {
+    // Allow requests with no origin (e.g., Postman)
+    if (!origin) return callback(null, true);
+
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
+      callback(null, origin); // must return exact origin, not true
     } else {
-      callback(new Error('CORS policy violation: Origin not allowed'));
+      callback(new Error("CORS policy violation: Origin not allowed"));
     }
   },
   credentials: true,

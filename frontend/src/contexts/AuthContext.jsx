@@ -13,10 +13,11 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isChecking, setIsChecking] = useState(true); 
+  const [isChecking, setIsChecking] = useState(true);
+
   // ✅ Check authentication status
   const checkAuth = async () => {
-    
+
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/me`, {
         method: "GET",
@@ -25,11 +26,9 @@ export const AuthProvider = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("checkAuth user data:", data.user);
         setUser(data.user);
         return data.user;
       } else {
-        console.warn("checkAuth failed, status:", response.status);
         setUser(null);
         return null;
       }
@@ -38,7 +37,6 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       return null;
     } finally {
-      console.log("checkAuth completed");
       setLoading(false);
       setIsChecking(false);
     }
@@ -68,17 +66,18 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Failed to retrieve user after login");
       }
 
-      const normalizedUser = {
-        ...data.user,
-        role:
-          data.user.role === "student"
-            ? "student"
-            : data.user.role === "mentor"
-              ? "mentor"
-              : data.user.role,
-      };
+      setUser(userFromServer);
+      // const normalizedUser = {
+      //   ...data.user,
+      //   role:
+      //     data.user.role === "student"
+      //       ? "student"
+      //       : data.user.role === "mentor"
+      //         ? "mentor"
+      //         : data.user.role,
+      // };
 
-      setUser(normalizedUser);
+      // setUser(normalizedUser);
       return { user: normalizedUser, token: data.token };
     } catch (error) {
       throw new Error(error.message || "Login failed");
@@ -111,6 +110,7 @@ export const AuthProvider = ({ children }) => {
           college,
           ...extras,
         }),
+        credentials: "include",
       });
 
       const data = await response.json();

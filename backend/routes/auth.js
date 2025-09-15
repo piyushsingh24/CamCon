@@ -512,7 +512,6 @@ router.get("/me", async (req, res) => {
     if (!user) {
       user = await Mentor.findById(decoded.userId)
         .select("-password")
-        .populate("college");
     }
 
     if (!user) {
