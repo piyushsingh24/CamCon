@@ -26,7 +26,7 @@ app.use(cors({
 // Setup Socket.IO with same CORS config
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: "https://camcon-frontend.onrender.com",
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true,
   },
