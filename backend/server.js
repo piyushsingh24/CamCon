@@ -1,67 +1,72 @@
-import express from "express"
-import cors from "cors"
-import dotenv from "dotenv"
-import { createServer } from "http"
-import { Server } from "socket.io"
-import connectDB from "./config/database.js"
-import authRoutes from "./routes/auth.js"
-import collegeRoutes from "./routes/colleges.js"
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import connectDB from "./config/database.js";
+import authRoutes from "./routes/auth.js";
+import collegeRoutes from "./routes/colleges.js";
 // import userRoutes from "./routes/users.js"
-import sessionRoutes from "./routes/sessions.js"
-
-import cookieParser from "cookie-parser"
+import sessionRoutes from "./routes/sessions.js";
+import cookieParser from "cookie-parser";
 import mentorRoutes from "./routes/mentor.js";
-import messageRoute from './routes/message.js'
+import messageRoute from './routes/message.js';
 
-
-dotenv.config()
+dotenv.config();
 
 const app = express();
-const server = createServer(app)
+const server = createServer(app);
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://camcon-frontend.onrender.com"
+];
+
+// Setup CORS middleware
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);  // Allow Postman, etc.
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation: Origin not allowed'));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// Setup Socket.IO with same CORS config
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true,
   },
-})
+});
 
 // Connect to MongoDB
-connectDB()
+connectDB();
 
-
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
-  credentials: true,
-  methods: ["GET", "POST", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
-
+// JSON + URL encoding + Cookie Parser middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-
-// Routes
-app.use("/api/auth", authRoutes)
-app.use("/api/colleges", collegeRoutes)
-// app.use("/api/users", userRoutes)
-app.use("/api/sessions", sessionRoutes)
-// app.use("/api/payments", paymentRoutes)
-app.use("/api/messages", messageRoute)
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/colleges", collegeRoutes);
+// app.use("/api/users", userRoutes);
+app.use("/api/sessions", sessionRoutes);
+// app.use("/api/payments", paymentRoutes);
+app.use("/api/messages", messageRoute);
 app.use("/api/mentors", mentorRoutes);
 
-
-// Socket.IO setup
-//In future if i want to expand the idea i am able to used it 
-// setupSocketHandlers(io)
-
-const onlineUsers = new Map(); // Map<userId, socketId>
+// Socket.IO connection logic
+const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
-
-  // Listen for "setup" event from client to identify user
   socket.on('setup', (userId) => {
     onlineUsers.set(userId, socket.id);
     socket.emit('setup_complete', 'OK');
@@ -69,13 +74,11 @@ io.on('connection', (socket) => {
 
   socket.on('send_message', (data) => {
     const receiverSocketId = onlineUsers.get(data.receiverId);
-    
     if (receiverSocketId) {
       io.to(receiverSocketId).emit('receiveMessage', data);
     }
   });
 
-  // Cleanup when user disconnects
   socket.on('disconnect', () => {
     onlineUsers.forEach((value, key) => {
       if (value === socket.id) {
@@ -85,19 +88,19 @@ io.on('connection', (socket) => {
   });
 });
 
+// Default route
 app.get("/", (req, res) => {
-  res.send("CamCon Backend is running")
-})
+  res.send("CamCon Backend is running");
+});
 
-// // Error handling middleware
+// Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack)
-  res.status(500).json({ message: "Something went wrong!" })
-})
+  console.error(err.stack);
+  res.status(500).json({ message: "Something went wrong!" });
+});
 
-
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-  console.log(`🚀CamCon server running on port ${PORT}`)
-})
+  console.log(`🚀 CamCon server running on port ${PORT}`);
+});
